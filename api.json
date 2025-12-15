@@ -1,0 +1,583 @@
+{
+  "info": {
+    "name": "GOV360 Organization Service",
+    "description": "API collection for GOV360 Organization Service",
+    "version": "0.2.1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://v2.gov360.tadafur.com/api/organization",
+      "type": "string"
+    },
+    {
+      "key": "keycloak_base",
+      "value": "https://v2.auth.gov360.tadafur.com",
+      "type": "string"
+    },
+    {
+      "key": "realm",
+      "value": "gov360",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "organization_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "membership_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_sub",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "unit_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Get Access Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', jsonData.access_token);",
+                  "    pm.collectionVariables.set('refresh_token', jsonData.refresh_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "client_id",
+                  "value": "api-tester",
+                  "type": "text"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "password",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{username}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_base}}/realms/{{realm}}/protocol/openid-connect/token",
+              "host": ["{{keycloak_base}}"],
+              "path": ["realms", "{{realm}}", "protocol", "openid-connect", "token"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Organizations",
+      "item": [
+        {
+          "name": "Get My Organization",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organizations/my-organization",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "my-organization"]
+            },
+            "description": "Get the organization for the current user"
+          }
+        },
+        {
+          "name": "Get Organization by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organizations/{{organization_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "{{organization_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Organization",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('organization_id', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"example-org\",\n  \"name\": {\n    \"en\": \"Example Organization\",\n    \"ar\": \"منظمة تجريبية\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/organizations",
+              "host": ["{{base_url}}"],
+              "path": ["organizations"]
+            }
+          }
+        },
+        {
+          "name": "Update Organization (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": {\n    \"en\": \"Updated Organization\",\n    \"ar\": \"منظمة محدثة\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/organizations/{{organization_id}}?operation=update-name",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "{{organization_id}}"],
+              "query": [
+                {
+                  "key": "operation",
+                  "value": "update-name"
+                }
+              ]
+            },
+            "description": "Operations: update-name, update-slug, activate, deactivate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Memberships",
+      "item": [
+        {
+          "name": "Get My Membership",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organization-memberships/my-membership",
+              "host": ["{{base_url}}"],
+              "path": ["organization-memberships", "my-membership"]
+            }
+          }
+        },
+        {
+          "name": "Get Membership by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organization-memberships/{{membership_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["organization-memberships", "{{membership_id}}"]
+            }
+          }
+        },
+        {
+          "name": "List My Organization Memberships",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organizations/my-organization/memberships",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "my-organization", "memberships"]
+            },
+            "description": "List all memberships in the current user's organization"
+          }
+        },
+        {
+          "name": "Create Membership",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('membership_id', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"user-keycloak-id\",\n  \"organizationId\": \"{{organization_id}}\",\n  \"roleType\": \"MEMBER\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/organization-memberships",
+              "host": ["{{base_url}}"],
+              "path": ["organization-memberships"]
+            }
+          }
+        },
+        {
+          "name": "Update Membership (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleType\": \"ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/organization-memberships/{{membership_id}}?operation=update-role",
+              "host": ["{{base_url}}"],
+              "path": ["organization-memberships", "{{membership_id}}"],
+              "query": [
+                {
+                  "key": "operation",
+                  "value": "update-role"
+                }
+              ]
+            },
+            "description": "Operations: update-role, activate, deactivate"
+          }
+        },
+        {
+          "name": "Delete Membership",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organization-memberships/{{membership_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["organization-memberships", "{{membership_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Modules",
+      "item": [
+        {
+          "name": "List Module Groups",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/modules/groups",
+              "host": ["{{base_url}}"],
+              "path": ["modules", "groups"]
+            },
+            "description": "Get all module groups with their modules (READ ONLY - seeded from database)"
+          }
+        },
+        {
+          "name": "Update Organization Module Assignments",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"moduleIds\": [1, 2, 3, 4, 5]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/modules/organizations/{{organization_id}}/assignments",
+              "host": ["{{base_url}}"],
+              "path": ["modules", "organizations", "{{organization_id}}", "assignments"]
+            },
+            "description": "Assign modules to an organization (replaces existing assignments)"
+          }
+        },
+        {
+          "name": "Update Membership Module Assignments",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"moduleIds\": [1, 2, 5]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/modules/memberships/{{membership_id}}/assignments",
+              "host": ["{{base_url}}"],
+              "path": ["modules", "memberships", "{{membership_id}}", "assignments"]
+            },
+            "description": "Assign modules to a membership (replaces existing assignments)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Organization Units",
+      "item": [
+        {
+          "name": "Get Unit Tree by Unit ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organization-units/:unitId/tree?depth=10",
+              "host": ["{{base_url}}"],
+              "path": ["organization-units", ":unitId", "tree"],
+              "query": [
+                {
+                  "key": "depth",
+                  "value": "10",
+                  "description": "Tree depth (0-100)"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "unitId",
+                  "value": "{{unit_id}}"
+                }
+              ]
+            },
+            "description": "Get organizational unit tree starting from a specific unit"
+          }
+        },
+        {
+          "name": "Get Unit Tree by Organization ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organizations/{{organization_id}}/organization-unit/tree?depth=10",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "{{organization_id}}", "organization-unit", "tree"],
+              "query": [
+                {
+                  "key": "depth",
+                  "value": "10",
+                  "description": "Tree depth (0-100)"
+                }
+              ]
+            },
+            "description": "Get the full organizational unit tree for an organization"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Create User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('user_sub', jsonData.sub);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newuser\",\n  \"email\": \"user@example.com\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            },
+            "description": "Create a new user in Keycloak (requires GOV360_ADMIN role or can_manage_members permission)"
+          }
+        },
+        {
+          "name": "Disable User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_sub}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_sub}}"]
+            },
+            "description": "Disable a user in Keycloak (requires GOV360_ADMIN role or can_manage_members permission)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Permissions",
+      "item": [
+        {
+          "name": "Grant Organization Permission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sub\": \"{{user_sub}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permissions/organizations/{{organization_id}}/writers",
+              "host": ["{{base_url}}"],
+              "path": ["permissions", "organizations", "{{organization_id}}", "writers"]
+            },
+            "description": "Grant permission to a user. Relations: writers, admins"
+          }
+        },
+        {
+          "name": "Revoke Organization Permission",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sub\": \"{{user_sub}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permissions/organizations/{{organization_id}}/writers",
+              "host": ["{{base_url}}"],
+              "path": ["permissions", "organizations", "{{organization_id}}", "writers"]
+            },
+            "description": "Revoke permission from a user. Relations: writers, admins"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/actuator/health",
+              "host": ["{{base_url}}"],
+              "path": ["actuator", "health"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
