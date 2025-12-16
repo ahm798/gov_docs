@@ -368,17 +368,134 @@ Content-Type: application/json
 
 Hierarchical units within an organization (stored in Neo4j graph database).
 
+#### List Organization Units
+
+```http
+GET /organization-units?page=0&size=20
+```
+
+**Query Parameters:**
+- `page`: Page number (default: 0)
+- `size`: Page size (default: 20)
+
+**Response:** `200 OK`
+
+```json
+{
+  "_embedded": {
+    "organizationUnits": [
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "name": {
+          "en": "Executive Office",
+          "ar": "المكتب التنفيذي"
+        },
+        "parentId": null
+      }
+    ]
+  },
+  "page": {
+    "size": 20,
+    "totalElements": 1,
+    "totalPages": 1,
+    "number": 0
+  }
+}
+```
+
+#### Get Organization Unit by ID
+
+```http
+GET /organization-units/{id}
+```
+
+**Response:** `200 OK`
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": {
+    "en": "Executive Office",
+    "ar": "المكتب التنفيذي"
+  },
+  "parentId": null,
+  "_links": {
+    "self": {
+      "href": "/organization-units/550e8400-e29b-41d4-a716-446655440000"
+    }
+  }
+}
+```
+
+#### Create Organization Unit
+
+```http
+POST /organization-units
+Content-Type: application/json
+
+{
+  "name": {
+    "en": "New Department",
+    "ar": "قسم جديد"
+  },
+  "parentId": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+**Required Fields:**
+- `name`: LocalizedValue object with language keys
+
+**Optional Fields:**
+- `parentId`: UUID of parent organization unit
+
+**Response:** `201 Created` with same structure as GET response
+
+#### Update Organization Unit
+
+```http
+PUT /organization-units/{id}
+Content-Type: application/json
+
+{
+  "name": {
+    "en": "Updated Department",
+    "ar": "قسم محدث"
+  },
+  "parentId": "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+}
+```
+
+**Response:** `200 OK` with updated organization unit object
+
+#### Delete Organization Unit
+
+```http
+DELETE /organization-units/{id}
+```
+
+**Response:** `204 No Content`
+
 #### Get Unit Tree by Unit ID
 
 ```http
 GET /organization-units/{unitId}/tree?depth=10
 ```
 
+**Query Parameters:**
+- `depth`: Tree depth to retrieve (default: unlimited)
+
+**Response:** `200 OK` with nested tree structure
+
 #### Get Unit Tree by Organization ID
 
 ```http
 GET /organizations/{organizationId}/organization-unit/tree?depth=10
 ```
+
+**Query Parameters:**
+- `depth`: Tree depth to retrieve (default: unlimited)
+
+**Response:** `200 OK` with nested tree structure
 
 ---
 
@@ -409,25 +526,94 @@ DELETE /users/{sub}
 
 ### Permissions
 
-#### Grant Organization Permission
+Fine-grained permission management for organizations and organization groups.
+
+#### Grant Permission
 
 ```http
-POST /permissions/organizations/{organizationId}/writers
+POST /permissions/{kind}/{id}/{relation}
 Content-Type: application/json
 
 {
-  "sub": "user-uuid"
+  "sub": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
-#### Revoke Organization Permission
+**Path Parameters:**
+- `kind`: Resource type (`organizations` or `organization-groups`)
+- `id`: Resource UUID
+- `relation`: Permission type (`writers` or `admins`)
 
+**Request Body:**
+- `sub`: User UUID (must be valid UUID format)
+
+**Examples:**
+
+Grant writer permission to organization:
 ```http
-DELETE /permissions/organizations/{organizationId}/writers
+POST /permissions/organizations/123e4567-e89b-12d3-a456-426614174000/writers
 Content-Type: application/json
 
 {
-  "sub": "user-uuid"
+  "sub": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+Grant admin permission to organization group:
+```http
+POST /permissions/organization-groups/123e4567-e89b-12d3-a456-426614174000/admins
+Content-Type: application/json
+
+{
+  "sub": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+**Response:** `204 No Content`
+
+**Authorization:** Requires `can_manage_writers` or `can_manage_admins` permission on the resource
+
+#### Revoke Permission
+
+```http
+DELETE /permissions/{kind}/{id}/{relation}
+Content-Type: application/json
+
+{
+  "sub": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+**Path Parameters:** Same as Grant Permission
+
+**Response:** `204 No Content`
+
+**Authorization:** Requires `can_manage_writers` or `can_manage_admins` permission on the resource
+
+---
+
+### Organization Groups
+
+#### Get My Organization Group
+
+```http
+GET /organization-groups/my-organization-group
+```
+
+**Response:** `200 OK`
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": {
+    "en": "Government Ministries",
+    "ar": "الوزارات الحكومية"
+  },
+  "_links": {
+    "self": {
+      "href": "/organization-groups/550e8400-e29b-41d4-a716-446655440000"
+    }
+  }
 }
 ```
 
@@ -544,6 +730,16 @@ Multilingual support for text fields:
 }
 ```
 
+### OrganizationUnit
+
+```json
+{
+  "id": "uuid",
+  "name": "LocalizedValue<String>",
+  "parentId": "uuid (nullable)"
+}
+```
+
 ## Authorization
 
 The service uses OpenFGA for fine-grained authorization:
@@ -553,19 +749,3 @@ The service uses OpenFGA for fine-grained authorization:
 - Membership-level permissions (user roles within organizations)
 
 Authorization checks are performed automatically based on JWT claims and OpenFGA tuples.
-
-## Rate Limiting
-
-Currently no rate limiting is enforced. This may be added in future versions.
-
-## Versioning
-
-API version is included in the base path: `/api/organization`
-
-Future versions may use: `/api/v2/organization`
-
-## Support
-
-For API support and questions:
-- **Email:** support@tadafur.com
-- **Documentation:** https://docs.gov360.tadafur.com
