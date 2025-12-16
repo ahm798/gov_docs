@@ -121,6 +121,11 @@
                   "key": "password",
                   "value": "{{password}}",
                   "type": "text"
+                },
+                {
+                  "key": "scope",
+                  "value": "openid",
+                  "type": "text"
                 }
               ]
             },
@@ -292,7 +297,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": \"user-keycloak-id\",\n  \"organizationId\": \"{{organization_id}}\",\n  \"roleType\": \"MEMBER\"\n}"
+              "raw": "{\n  \"sub\": \"{{user_sub}}\",\n  \"organizationId\": \"{{organization_id}}\",\n  \"organizationUnitId\": null,\n  \"reportsToId\": null,\n  \"moduleIds\": []\n}"
             },
             "url": {
               "raw": "{{base_url}}/organization-memberships",
@@ -408,6 +413,109 @@
     {
       "name": "Organization Units",
       "item": [
+        {
+          "name": "List Organization Units",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organization-units?page=0&size=20",
+              "host": ["{{base_url}}"],
+              "path": ["organization-units"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "List all organization units with pagination"
+          }
+        },
+        {
+          "name": "Get Organization Unit by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organization-units/{{unit_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["organization-units", "{{unit_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Organization Unit",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('unit_id', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": {\n    \"en\": \"IT Department\",\n    \"ar\": \"قسم تقنية المعلومات\"\n  },\n  \"organizationId\": \"{{organization_id}}\",\n  \"parentId\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/organization-units",
+              "host": ["{{base_url}}"],
+              "path": ["organization-units"]
+            }
+          }
+        },
+        {
+          "name": "Update Organization Unit",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": {\n    \"en\": \"IT & Innovation Department\",\n    \"ar\": \"قسم تقنية المعلومات والابتكار\"\n  },\n  \"organizationId\": \"{{organization_id}}\",\n  \"parentId\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/organization-units/{{unit_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["organization-units", "{{unit_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Organization Unit",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/organization-units/{{unit_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["organization-units", "{{unit_id}}"]
+            }
+          }
+        },
         {
           "name": "Get Unit Tree by Unit ID",
           "request": {
@@ -528,11 +636,11 @@
               "raw": "{\n  \"sub\": \"{{user_sub}}\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/permissions/organizations/{{organization_id}}/writers",
+              "raw": "{{base_url}}/permissions/ORGANIZATION/{{organization_id}}/WRITER",
               "host": ["{{base_url}}"],
-              "path": ["permissions", "organizations", "{{organization_id}}", "writers"]
+              "path": ["permissions", "ORGANIZATION", "{{organization_id}}", "WRITER"]
             },
-            "description": "Grant permission to a user. Relations: writers, admins"
+            "description": "Grant permission to a user. Kinds: ORGANIZATION, ORGANIZATION_UNIT, ORGANIZATION_MEMBERSHIP. Relations: WRITER, ADMIN"
           }
         },
         {
@@ -550,11 +658,11 @@
               "raw": "{\n  \"sub\": \"{{user_sub}}\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/permissions/organizations/{{organization_id}}/writers",
+              "raw": "{{base_url}}/permissions/ORGANIZATION/{{organization_id}}/WRITER",
               "host": ["{{base_url}}"],
-              "path": ["permissions", "organizations", "{{organization_id}}", "writers"]
+              "path": ["permissions", "ORGANIZATION", "{{organization_id}}", "WRITER"]
             },
-            "description": "Revoke permission from a user. Relations: writers, admins"
+            "description": "Revoke permission from a user. Kinds: ORGANIZATION, ORGANIZATION_UNIT, ORGANIZATION_MEMBERSHIP. Relations: WRITER, ADMIN"
           }
         }
       ]
